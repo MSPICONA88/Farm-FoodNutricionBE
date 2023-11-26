@@ -181,7 +181,9 @@ public class DietaController : ControllerBase
         {
             var resultado = new ResultadoListDietasConAlimentos();
 
-            var dietas = await _context.Dietas.ToListAsync();
+            var dietas = await _context.Dietas
+            .OrderByDescending(dieta => dieta.FechaCreacion)
+            .ToListAsync();
 
             foreach (var dieta in dietas)
             {
@@ -419,7 +421,73 @@ public class DietaController : ControllerBase
         }
     }
 
+    [HttpDelete("api/dieta/delete/{idDieta}")]
+    public async Task<ActionResult<ResultadoBorrarDieta>> DeleteDieta(int idDieta)
+    {
+        var resultado = new ResultadoBorrarDieta();
+        try
+        {
+            // Verificar si la dieta ha sido utilizada en algún plan de alimentación
+            var dietaEnUso = await _context.PlanesAlimentacions
+                .AnyAsync(pa => pa.IdDieta == idDieta);
 
+            if (dietaEnUso)
+            {
+                resultado.SetError("No se puede eliminar la dieta porque ya ha sido utilizada en un plan de alimentación");
+                resultado.StatusCode = "404";
+                return resultado;
+                //return BadRequest("No se puede eliminar la dieta porque ya ha sido utilizada en un plan de alimentación");
+            }
+
+            // Verificar si la dieta existe
+            var dieta = await _context.Dietas.FindAsync(idDieta);
+
+            if (dieta == null)
+            {
+                resultado.SetError("No se encontró el id especificado");
+                resultado.StatusCode = "404";
+                return resultado;
+            }
+
+            // Eliminar los detalles de dieta (alimentos) asociados
+            var detallesDieta = await _context.AlimentosxDieta
+                .Where(ad => ad.IdDieta == idDieta)
+                .ToListAsync();
+
+            _context.AlimentosxDieta.RemoveRange(detallesDieta);
+
+            // Ahora podemos eliminar la dieta principal
+            _context.Dietas.Remove(dieta);
+
+            var resultadoDelete = await _context.SaveChangesAsync();
+
+            if (resultadoDelete < 1)
+            {
+                resultado.SetError("No se pudo borrar la dieta");
+                resultado.StatusCode = "404";
+                return resultado;
+            }
+
+            resultado.IdDieta = dieta.IdDieta;
+            resultado.StatusCode = "200";
+            return Ok(resultado);
+            // return Ok("Dieta eliminada correctamente");
+        }
+        catch (Exception e)
+        {
+            return BadRequest("Error al eliminar la dieta");
+        }
+    }
+
+
+    [HttpGet("api/dieta/verificarUsoDieta/{idDieta}")]
+    public async Task<ActionResult<bool>> VerificarUsoDieta(int idDieta)
+    {
+        // Verificar si hay planes de alimentación que usan la dieta
+        var dietaEnUso = await _context.PlanesAlimentacions.AnyAsync(p => p.IdDieta == idDieta);
+
+        return Ok(dietaEnUso);
+    }
 
 }
 

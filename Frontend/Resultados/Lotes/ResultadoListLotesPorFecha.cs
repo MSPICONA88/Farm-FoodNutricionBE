@@ -13,7 +13,7 @@ public class ResultadoListLotesPorFechaItem{
 
     public int CantidadAnimales { get; set; }
 
-    public double PesoTotal { get; set; }
+    public double PesoIngreso { get; set; }
 
     public string Finalidad { get; set; }= null!;
 
@@ -22,4 +22,10 @@ public class ResultadoListLotesPorFechaItem{
     public string Raza { get; set; }= null!;
 
     public int EdadMeses { get; set; }
+
+    public int? CantidadActual { get; set; }
+    public int? CantidadBajas { get; set; }
+    public DateOnly? FechaEgreso { get; set; }
+    public double? PesoEgreso { get; set; }
+    
 }

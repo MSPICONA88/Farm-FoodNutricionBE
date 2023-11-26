@@ -4,11 +4,11 @@ public class ComandoLote
 {
         //public int IdLote { get; set; }
 
-    public String FechaIngreso { get; set; }
+    public DateOnly FechaIngreso { get; set; }
 
     public int CantidadAnimales { get; set; }
 
-    public double PesoTotal { get; set; }
+    public double PesoIngreso { get; set; }
 
     public int IdFinalidad { get; set; }
 
