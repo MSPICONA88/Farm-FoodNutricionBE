@@ -69,15 +69,15 @@ public class EspecieController : ControllerBase
         }
 
         var cantidadAnimales = especie.Razas.Sum(r => r.Lotes.Sum(l => l.CantidadAnimales));
-        var pesoTotal = especie.Razas.Sum(r => r.Lotes.Sum(l => l.PesoTotal));
+        var PesoIngreso = especie.Razas.Sum(r => r.Lotes.Sum(l => l.PesoIngreso));
         var pesoPromedio = especie.Razas.Any()
-            ? especie.Razas.Sum(r => r.Lotes.Sum(l => l.PesoTotal)) / especie.Razas.Sum(r => r.Lotes.Count)
+            ? especie.Razas.Sum(r => r.Lotes.Sum(l => l.PesoIngreso)) / especie.Razas.Sum(r => r.Lotes.Count)
             : 0;
 
         var especieData = new
         {
             CantidadAnimales = cantidadAnimales,
-            PesoTotal = pesoTotal,
+            PesoIngreso = PesoIngreso,
             PesoPromedio = pesoPromedio
         };
 
@@ -88,13 +88,13 @@ public class EspecieController : ControllerBase
     public async Task<IActionResult> GetAllEspeciesData()
     {
         var cantidadAnimales = await _context.Lotes.SumAsync(l => l.CantidadAnimales);
-        var pesoTotal = await _context.Lotes.SumAsync(l => l.PesoTotal);
-        var pesoPromedio = await _context.Lotes.AverageAsync(l => l.PesoTotal);
+        var PesoIngreso = await _context.Lotes.SumAsync(l => l.PesoIngreso);
+        var pesoPromedio = await _context.Lotes.AverageAsync(l => l.PesoIngreso);
 
         var especiesData = new
         {
             CantidadAnimales = cantidadAnimales,
-            PesoTotal = pesoTotal,
+            PesoIngreso = PesoIngreso,
             PesoPromedio = pesoPromedio
         };
 

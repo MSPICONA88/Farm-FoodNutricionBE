@@ -1,17 +1,19 @@
 namespace Frontend.Resultados.Lotes;
 
-public class ResultadoListLotesPorEspecie
+public class ResultadoListLotesDispPorFecha: ResultadoBase
 {
-    public List<ResultadoListLotesPorEspecieItem> ListaLotesPorEspecie {get; set;} = new List<ResultadoListLotesPorEspecieItem>();
+    public List<ResultadoListLotesDispPorFechaItem> listaLotesDispPorFecha {get; set;} = new List<ResultadoListLotesDispPorFechaItem>();
 }
 
-
-public class ResultadoListLotesPorEspecieItem{ 
+public class ResultadoListLotesDispPorFechaItem
+{
     public int IdLote { get; set; }
     
     public DateOnly FechaIngreso { get; set; }
 
-    public int CantidadAnimales { get; set; }
+    public int CantidadActual { get; set; }
+
+    public int CantidadBajas { get; set; }
 
     public double PesoIngreso { get; set; }
 
@@ -22,6 +24,4 @@ public class ResultadoListLotesPorEspecieItem{
     public string Raza { get; set; }= null!;
 
     public int EdadMeses { get; set; }
-
-    public double PesoPromedioPorAnimal { get; set; }
 }

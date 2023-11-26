@@ -163,12 +163,15 @@ public partial class FarmFoodNutricionContext : DbContext
             entity.Property(e => e.IdLote)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("id_lote");
+            entity.Property(e => e.CantidadActual).HasColumnName("cantidad_actual");
             entity.Property(e => e.CantidadAnimales).HasColumnName("cantidad_animales");
             entity.Property(e => e.EdadMeses).HasColumnName("edad_meses");
+            entity.Property(e => e.FechaEgreso).HasColumnName("fecha_egreso");
             entity.Property(e => e.FechaIngreso).HasColumnName("fecha_ingreso");
             entity.Property(e => e.IdFinalidad).HasColumnName("id_finalidad");
             entity.Property(e => e.IdRaza).HasColumnName("id_raza");
-            entity.Property(e => e.PesoTotal).HasColumnName("peso_total");
+            entity.Property(e => e.PesoEgreso).HasColumnName("peso_egreso");
+            entity.Property(e => e.PesoIngreso).HasColumnName("peso_ingreso");
 
             entity.HasOne(d => d.IdFinalidadNavigation).WithMany(p => p.Lotes)
                 .HasForeignKey(d => d.IdFinalidad)

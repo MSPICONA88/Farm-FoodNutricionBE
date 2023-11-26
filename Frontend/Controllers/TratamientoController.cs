@@ -83,7 +83,7 @@ public class TratamientoController : ControllerBase
         DateOnly fechaFin = DateOnly.Parse(comandoFechas.FechaFin);
 
         var tratamientosPorFecha = await _context.TratamientosAnimals
-            .Where(t => t.FechaInicio >= fechaInicio && t.FechaFin <= fechaFin.AddDays(2))
+            .Where(t => t.FechaInicio >= fechaInicio && t.FechaFin <= fechaFin.AddDays(1))
             .Include(t => t.IdAnimalNavigation)
             .Include(t => t.IdTipoTratNavigation)
             .Select(t => new ResultadoListTratamientosPorFechaItem
@@ -94,7 +94,7 @@ public class TratamientoController : ControllerBase
                 Medicacion = t.Medicacion,
                 FechaInicio = t.FechaInicio,
                 FechaFin = t.FechaFin,
-                DiasDeTratamiento = (t.FechaFin.DayNumber) - (t.FechaInicio.DayNumber)
+                DiasDeTratamiento = t.FechaFin.DayNumber - t.FechaInicio.DayNumber + 1
             })
             .ToListAsync();
 

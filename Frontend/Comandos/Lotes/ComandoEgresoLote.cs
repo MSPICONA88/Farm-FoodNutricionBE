@@ -1,6 +1,6 @@
 namespace Frontend.Comandos.Lotes;
 
-public class ComandoUpdateLote
+public class ComandoEgresoLote
 {
     public String FechaIngreso { get; set; }
 
@@ -14,9 +14,7 @@ public class ComandoUpdateLote
 
     public int EdadMeses { get; set; }
 
-    public String? FechaEgreso { get; set; }
+    public String FechaEgreso { get; set; }
 
-    public double? PesoEgreso { get; set; }=0;
-
-    // public int CantidadFinal { get; set; }
+    public double PesoEgreso { get; set; }
 }

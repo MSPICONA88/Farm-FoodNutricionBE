@@ -8,12 +8,14 @@ public class ResultadoAltaLote: ResultadoBase
 
     public int CantidadAnimales { get; set; }
 
-    public double PesoTotal { get; set; }
+    public double PesoIngreso { get; set; }
 
     public string Finalidad { get; set; }=null!;
 
     public string Raza { get; set; }=null!;
 
     public int EdadMeses { get; set; }
+
+    public int CantidadActual { get; set; }
 
 }

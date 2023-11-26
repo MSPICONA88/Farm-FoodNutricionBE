@@ -7,7 +7,7 @@ public class ResultadoLotePorId: ResultadoBase
 
     public int CantidadAnimales { get; set; }
 
-    public double PesoTotal { get; set; }
+    public double PesoIngreso { get; set; }
 
     public int IdFinalidad { get; set; }
 
@@ -16,4 +16,6 @@ public class ResultadoLotePorId: ResultadoBase
     public int IdRaza { get; set; }
 
     public int EdadMeses { get; set; }
+
+    public int? CantidadActual { get; set; }
 }
