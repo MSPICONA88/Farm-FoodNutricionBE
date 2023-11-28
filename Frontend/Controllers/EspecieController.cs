@@ -68,17 +68,21 @@ public class EspecieController : ControllerBase
             return NotFound("ID de especie no válido.");
         }
 
-        var cantidadAnimales = especie.Razas.Sum(r => r.Lotes.Sum(l => l.CantidadAnimales));
-        var PesoIngreso = especie.Razas.Sum(r => r.Lotes.Sum(l => l.PesoIngreso));
+        var cantidadInicial = Math.Round((decimal)especie.Razas.Sum(r => r.Lotes.Sum(l => l.CantidadAnimales)), 2);
+        var cantidadActual= Math.Round((decimal)especie.Razas.Sum(r => r.Lotes.Sum(l => l.CantidadActual)), 2);
+        var pesoIngreso = Math.Round((decimal)especie.Razas.Sum(r => r.Lotes.Sum(l => l.PesoIngreso)), 2);
+        
         var pesoPromedio = especie.Razas.Any()
             ? especie.Razas.Sum(r => r.Lotes.Sum(l => l.PesoIngreso)) / especie.Razas.Sum(r => r.Lotes.Count)
             : 0;
-
+        var pesoActualAprox= Math.Round((decimal)pesoPromedio*cantidadInicial,2);
         var especieData = new
         {
-            CantidadAnimales = cantidadAnimales,
-            PesoIngreso = PesoIngreso,
-            PesoPromedio = pesoPromedio
+            CantidadInicial = cantidadInicial,
+            CantidadActual= cantidadActual,
+            PesoIngreso = pesoIngreso,
+            PesoPromedio = Math.Round((decimal)pesoPromedio,2),
+            PesoActualAprox=pesoActualAprox
         };
 
         return Ok(especieData);
@@ -87,15 +91,19 @@ public class EspecieController : ControllerBase
     [HttpGet("api/reporte/especie")]
     public async Task<IActionResult> GetAllEspeciesData()
     {
-        var cantidadAnimales = await _context.Lotes.SumAsync(l => l.CantidadAnimales);
-        var PesoIngreso = await _context.Lotes.SumAsync(l => l.PesoIngreso);
+        var cantidadActual = await _context.Lotes.SumAsync(l => l.CantidadActual);
+        var cantidadInicial = await _context.Lotes.SumAsync(l => l.CantidadAnimales);
+        var pesoIngreso = await _context.Lotes.SumAsync(l => l.PesoIngreso);
         var pesoPromedio = await _context.Lotes.AverageAsync(l => l.PesoIngreso);
+        var pesoActualAprox= pesoPromedio*cantidadActual;
 
         var especiesData = new
         {
-            CantidadAnimales = cantidadAnimales,
-            PesoIngreso = PesoIngreso,
-            PesoPromedio = pesoPromedio
+            CantidadActual = cantidadActual,
+            CantidadInicial= cantidadInicial,
+            PesoIngreso = pesoIngreso,
+            PesoPromedio = pesoPromedio,
+            PesoActualAprox= pesoActualAprox
         };
 
         return Ok(especiesData);
@@ -135,7 +143,8 @@ public class EspecieController : ControllerBase
                 Especie = l.IdRazaNavigation.IdEspecieNavigation.NombreEspecie,
                 Mes = l.FechaIngreso.Month,
                 Año = l.FechaIngreso.Year,
-                CantidadAnimales = l.CantidadAnimales
+                CantidadInicial= l.CantidadAnimales,
+                CantidadActual = l.CantidadActual
             })
             .GroupBy(a => new { a.Especie, a.Mes, a.Año })
             .Select(g => new AnimalesPorEspecieDTO
@@ -143,7 +152,8 @@ public class EspecieController : ControllerBase
                 Especie = g.Key.Especie,
                 Mes = g.Key.Mes,
                 Año = g.Key.Año,
-                CantidadAnimales = g.Sum(a => a.CantidadAnimales)
+                CantidadInicial = g.Sum(a => a.CantidadInicial),
+                CantidadActual = g.Sum(a => a.CantidadActual)
             })
             .OrderBy(a => a.Año) // Ordenar por año ascendente
             .ThenBy(a => a.Mes) // Luego ordenar por mes ascendente
@@ -206,7 +216,7 @@ public class EspecieController : ControllerBase
                 Especie = l.IdRazaNavigation.IdEspecieNavigation.NombreEspecie,
                 Mes = l.FechaIngreso.Month,
                 Año = l.FechaIngreso.Year,
-                CantidadAnimales = l.CantidadAnimales
+                CantidadActual = l.CantidadActual
             })
             .GroupBy(a => new { a.Especie, a.Mes, a.Año })
             .Select(g => new AnimalesPorEspecieDTO
@@ -214,7 +224,7 @@ public class EspecieController : ControllerBase
                 Especie = g.Key.Especie,
                 Mes = g.Key.Mes,
                 Año = g.Key.Año,
-                CantidadAnimales = g.Sum(a => a.CantidadAnimales)
+                CantidadActual = g.Sum(a => a.CantidadActual)
             })
             .OrderBy(a => a.Año) // Ordenar por año ascendente
             .ThenBy(a => a.Mes) // Luego ordenar por mes ascendente

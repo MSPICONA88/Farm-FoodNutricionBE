@@ -106,17 +106,54 @@ public class TratamientoController : ControllerBase
 
         if (tratamientosPorFecha == null || tratamientosPorFecha.Count == 0)
         {
-            
+
             resultado.SetError("No se encontraron tratamientos para la fecha especificada");
-            
+
             return Ok(resultado);
-            
+
         }
-        
+
         resultado.StatusCode = "200";
         return Ok(resultado);
     }
 
+
+    [HttpGet("api/tratamientos/getTratamientos")]
+    public async Task<ActionResult<ResultadoListTratamientos>> GetTratamientos()
+    {
+
+
+        var tratamientos = await _context.TratamientosAnimals
+            .Include(t => t.IdAnimalNavigation)
+            .Include(t => t.IdTipoTratNavigation)
+            .Select(t => new ResultadoListTratamientosItem
+            {
+                Especie = t.IdAnimalNavigation.IdLoteNavigation.IdRazaNavigation.IdEspecieNavigation.NombreEspecie,
+                Raza = t.IdAnimalNavigation.IdLoteNavigation.IdRazaNavigation.NombreRaza,
+                NombreTratamiento = t.IdTipoTratNavigation.Decripcion,
+                Medicacion = t.Medicacion,
+                FechaInicio = t.FechaInicio,
+                FechaFin = t.FechaFin,
+                DiasDeTratamiento = t.FechaFin.DayNumber - t.FechaInicio.DayNumber + 1
+            })
+            .ToListAsync();
+
+        var resultado = new ResultadoListTratamientos
+        {
+            listaTratatamientos = tratamientos
+        };
+
+        if (tratamientos == null || tratamientos.Count == 0)
+        {
+
+            resultado.SetError("No se encontraron tratamientos");
+
+            return Ok(resultado);
+
+        }
+        resultado.StatusCode = "200";
+        return Ok(resultado);
+    }
 
 }
 

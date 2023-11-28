@@ -23,5 +23,7 @@ public class ResultadoListLotesPorEspecieItem{
 
     public int EdadMeses { get; set; }
 
-    public double PesoPromedioPorAnimal { get; set; }
+    public double PesoPromedioPorAnimalIngreso { get; set; }
+    public double PesoAproxActual { get; set; }
+    public int CantidadActual { get; set; }
 }

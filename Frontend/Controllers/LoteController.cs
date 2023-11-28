@@ -200,41 +200,16 @@ public class LoteController : ControllerBase
         }
 
         // Validar si se ingresó una fecha de egreso
-        if (!string.IsNullOrEmpty(comandoLote.FechaEgreso))
-        {
-            // Si hay fecha de egreso, también debe haber peso de egreso
-            if (comandoLote.PesoEgreso == 0)
-            {
-                result.SetError("Si se proporciona una fecha de egreso, también se debe proporcionar un peso de egreso.");
-                result.StatusCode = "400"; // Código para Bad Request
-                return result;
-            }
 
 
-            lote.FechaIngreso = DateOnly.Parse(comandoLote.FechaIngreso);
-            lote.CantidadAnimales = comandoLote.CantidadAnimales;
-            lote.PesoIngreso = comandoLote.PesoIngreso;
-            lote.IdFinalidad = comandoLote.IdFinalidad;
-            lote.IdRaza = comandoLote.IdRaza;
-            lote.EdadMeses = comandoLote.EdadMeses;
-            lote.FechaEgreso = DateOnly.Parse(comandoLote.FechaEgreso);
-            lote.PesoEgreso = comandoLote.PesoEgreso;
-        }
 
-        else
-        {
-            result.SetError("El formato de la fecha de egreso no es válido.");
-            result.StatusCode = "400"; // Código para Bad Request
-            return result;
-        }
-
-        // lote.FechaIngreso = lote.FechaIngreso;
-        // lote.CantidadAnimales = lote.CantidadAnimales;
-        // lote.PesoIngreso = lote.PesoIngreso;
-        // lote.IdFinalidad = lote.IdFinalidad;
-        // lote.IdRaza = lote.IdRaza;
-        // lote.EdadMeses = lote.EdadMeses;
-
+        lote.FechaIngreso = DateOnly.Parse(comandoLote.FechaIngreso);
+        lote.CantidadAnimales = comandoLote.CantidadAnimales;
+        lote.PesoIngreso = comandoLote.PesoIngreso;
+        lote.IdFinalidad = comandoLote.IdFinalidad;
+        lote.IdRaza = comandoLote.IdRaza;
+        lote.EdadMeses = comandoLote.EdadMeses;
+        lote.CantidadActual=comandoLote.CantidadAnimales;
 
         _context.Lotes.Update(lote);
 
@@ -255,8 +230,9 @@ public class LoteController : ControllerBase
         result.IdFinalidad = lote.IdFinalidad;
         result.IdRaza = lote.IdRaza;
         result.EdadMeses = lote.EdadMeses;
-        result.PesoEgreso = (double)lote.PesoEgreso;
-        result.FechaEgreso = (DateOnly)lote.FechaEgreso;
+        result.CantidadActual=lote.CantidadActual;
+        // result.PesoEgreso = (double)lote.PesoEgreso;
+        // result.FechaEgreso = (DateOnly)lote.FechaEgreso;
         result.StatusCode = "200";
         return result;
     }
@@ -288,7 +264,9 @@ public class LoteController : ControllerBase
         result.IdEspecie = lote.IdRazaNavigation.IdEspecie;
         result.IdRaza = lote.IdRaza;
         result.EdadMeses = lote.EdadMeses;
-        result.CantidadActual= lote.CantidadActual;
+        result.CantidadActual = lote.CantidadActual;
+        result.FechaEgreso = lote.FechaEgreso;
+        result.PesoEgreso = lote.PesoEgreso;
 
         return result;
     }
@@ -311,7 +289,9 @@ public class LoteController : ControllerBase
                 Especie = l.IdRazaNavigation.IdEspecieNavigation.NombreEspecie,
                 Raza = l.IdRazaNavigation.NombreRaza,
                 EdadMeses = l.EdadMeses,
-                PesoPromedioPorAnimal = l.PesoIngreso / l.CantidadAnimales
+                PesoPromedioPorAnimalIngreso = l.PesoIngreso / l.CantidadAnimales,
+                PesoAproxActual=l.CantidadActual*(l.PesoIngreso / l.CantidadAnimales),
+                CantidadActual= l.CantidadActual
             })
             .ToListAsync();
 
@@ -519,6 +499,84 @@ public class LoteController : ControllerBase
         resultado.CantidadActual = lote.CantidadActual;
         resultado.StatusCode = "200";
         return Ok(resultado);
+    }
+
+
+    [HttpPut("api/lote/egresarLote/{id}")]
+    public async Task<ResultadoUpdateLote> EgresarLote(int id, ComandoEgresoLote comandoLote)
+    {
+        var result = new ResultadoUpdateLote();
+        var lote = await _context.Lotes.FindAsync(id);
+        if (lote == null)
+        {
+            result.SetError("No se encontró el id de lote");
+            result.StatusCode = "404";
+            return result;
+        }
+
+        // Validar si se ingresó una fecha de egreso
+        if (!string.IsNullOrEmpty(comandoLote.FechaEgreso))
+        {
+            // Si hay fecha de egreso, también debe haber peso de egreso
+            if (comandoLote.PesoEgreso == 0)
+            {
+                result.SetError("Si se proporciona una fecha de egreso, también se debe proporcionar un peso de egreso.");
+                result.StatusCode = "400"; // Código para Bad Request
+                return result;
+            }
+
+
+            lote.FechaIngreso = DateOnly.Parse(comandoLote.FechaIngreso);
+            lote.CantidadAnimales = comandoLote.CantidadAnimales;
+            lote.PesoIngreso = comandoLote.PesoIngreso;
+            lote.IdFinalidad = comandoLote.IdFinalidad;
+            lote.IdRaza = comandoLote.IdRaza;
+            lote.EdadMeses = comandoLote.EdadMeses;
+            lote.FechaEgreso = DateOnly.Parse(comandoLote.FechaEgreso);
+            lote.PesoEgreso = comandoLote.PesoEgreso;
+            lote.CantidadActual=comandoLote.CantidadAnimales;
+            
+        }
+
+        else
+        {
+            result.SetError("El formato de la fecha de egreso no es válido.");
+            result.StatusCode = "400"; // Código para Bad Request
+            return result;
+        }
+
+        // lote.FechaIngreso = lote.FechaIngreso;
+        // lote.CantidadAnimales = lote.CantidadAnimales;
+        // lote.PesoIngreso = lote.PesoIngreso;
+        // lote.IdFinalidad = lote.IdFinalidad;
+        // lote.IdRaza = lote.IdRaza;
+        // lote.EdadMeses = lote.EdadMeses;
+
+
+        _context.Lotes.Update(lote);
+
+        var resultadoUpdate = await _context.SaveChangesAsync();
+
+
+        if (resultadoUpdate < 1)
+        {
+            result.SetError("No se pudo actualizar el lote");
+            result.StatusCode = "404";
+            return result;
+        }
+
+
+        result.FechaIngreso = lote.FechaIngreso;
+        result.CantidadAnimales = lote.CantidadAnimales;
+        result.PesoIngreso = lote.PesoIngreso;
+        result.IdFinalidad = lote.IdFinalidad;
+        result.IdRaza = lote.IdRaza;
+        result.EdadMeses = lote.EdadMeses;
+        result.CantidadActual=lote.CantidadActual;
+        result.PesoEgreso = (double)lote.PesoEgreso;
+        result.FechaEgreso = (DateOnly)lote.FechaEgreso;
+        result.StatusCode = "200";
+        return result;
     }
 
 }

@@ -14,9 +14,9 @@ public class ComandoUpdateLote
 
     public int EdadMeses { get; set; }
 
-    public String? FechaEgreso { get; set; }
+    
 
-    public double? PesoEgreso { get; set; }=0;
+    
 
-    // public int CantidadFinal { get; set; }
+    
 }

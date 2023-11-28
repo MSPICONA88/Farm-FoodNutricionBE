@@ -71,13 +71,13 @@ public class PlanificacionController : ControllerBase
             var fechaActual = DateOnly.FromDateTime(DateTime.Now);
 
             var query = from pa in _context.PlanesAlimentacions
-                    join l in _context.Lotes on pa.IdLote equals l.IdLote
-                    join r in _context.Razas on l.IdRaza equals r.IdRaza
-                    join e in _context.Especies on r.IdEspecie equals e.IdEspecie
-                    join d in _context.Dietas on pa.IdDieta equals d.IdDieta
-                    where pa.FechaInicio <= fechaActual && pa.FechaFin >= fechaActual
-                    && !_context.Alimentaciones.Any(a => a.IdPlan == pa.IdPlan && a.FechaAlimentacion == fechaActual)
-                    orderby pa.IdPlan ascending
+                        join l in _context.Lotes on pa.IdLote equals l.IdLote
+                        join r in _context.Razas on l.IdRaza equals r.IdRaza
+                        join e in _context.Especies on r.IdEspecie equals e.IdEspecie
+                        join d in _context.Dietas on pa.IdDieta equals d.IdDieta
+                        where pa.FechaInicio <= fechaActual && pa.FechaFin >= fechaActual
+                        && !_context.Alimentaciones.Any(a => a.IdPlan == pa.IdPlan && a.FechaAlimentacion == fechaActual)
+                        orderby pa.IdPlan ascending
                         select new ResultadoListPlanAlimentacionItem
                         {
                             IdPlan = pa.IdPlan,
@@ -223,22 +223,30 @@ public class PlanificacionController : ControllerBase
 
             // Calcular el estado
             string estado;
-            if (stockActual == 0 || stockNecesario > stockActual)
+            decimal porcentajeFaltante = (stockNecesario - stockActual) / stockNecesario * 100;
+            //decimal porcentajeSobrante = (stockActual-stockNecesario) / stockNecesario * 100;
+            if (stockActual < stockNecesario)
             {
-                estado = "SIN STOCK";
-            }
-            else if (stockActual > 1.1m * stockNecesario)
-            {
-                estado = "SOBRESTOCK";
-                cantidadAComprar = 0; // No se necesita comprar en caso de sobrestock
-            }
-            else if (cantidadAComprar <= 0.1m * stockNecesario)
-            {
-                estado = "OK";
+                if (porcentajeFaltante <= 10)
+                {
+                    estado = "BAJO";
+                }
+                else
+                {
+                    estado = "SIN STOCK";
+                }
             }
             else
             {
-                estado = "BAJO";
+                if (porcentajeFaltante >= (-10))
+                {
+                    estado = "OK";
+                }
+                else
+                {
+                    estado = "SOBRESTOCK";
+                    cantidadAComprar = 0; // No se necesita comprar en caso de sobrestock
+                }
             }
 
             // Crear objeto DTO con los datos del alimento

@@ -17,5 +17,9 @@ public class ResultadoLotePorId: ResultadoBase
 
     public int EdadMeses { get; set; }
 
-    public int? CantidadActual { get; set; }
+    public DateOnly? FechaEgreso { get; set; }
+
+    public double? PesoEgreso { get; set; }
+
+    public int CantidadActual { get; set; }
 }

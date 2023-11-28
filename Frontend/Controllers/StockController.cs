@@ -99,6 +99,35 @@ public class StockController : ControllerBase
         }
     }
 
+    [HttpGet("api/stock/getStock")]
+    public async Task<ActionResult<ResultadoListStock>> GetStock()
+    {
+        var result = new ResultadoListStock();
+        var stock = await _context.StockAlimentos
+            .Include(s => s.IdAlimentoNavigation)
+            .Include(s => s.IdTipoMovimientoNavigation)
+            .OrderByDescending(s => s.FechaRegistro)
+            .Select(s => new ResultadoListStockItem
+            {
+                IdStock = s.IdStock,
+                Alimento = s.IdAlimentoNavigation.NombreAlimento,
+                FechaRegistro = s.FechaRegistro,
+                Toneladas = s.Toneladas,
+                PrecioTonelada = s.PrecioTonelada,
+                TipoMovimiento = s.IdTipoMovimientoNavigation.NombreMovimiento,
+
+            })
+            .ToListAsync();
+
+        var resultado = new ResultadoListStock
+        {
+            listaStock = stock
+        };
+
+        return result;
+
+    }
+
     [HttpGet("api/stock/{idAlimento}")]
     public async Task<ActionResult<ResultadoStockPorIdDeAlimento>> ConsultarStockPorAli(int idAlimento)
     {
@@ -125,12 +154,12 @@ public class StockController : ControllerBase
         // Actualizar el stock acumulado en cada objeto ResultadoListStockPorFechaItem
         return resultado;
     }
-                                                    
+
 
     [HttpPost]
     [Route("api/stock/registrarMovi")]
 
-     public async Task<ActionResult<ResultadoAltaStock>> RegistrarMovi([FromBody] ComandoStock stock)
+    public async Task<ActionResult<ResultadoAltaStock>> RegistrarMovi([FromBody] ComandoStock stock)
     {
         var alimento = await _context.Alimentos.FindAsync(stock.IdAlimento);
         var result = new ResultadoAltaStock();

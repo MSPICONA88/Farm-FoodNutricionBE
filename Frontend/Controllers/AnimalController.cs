@@ -252,7 +252,7 @@ public class AnimalController : ControllerBase
                 {
                     Especie = g.Key.NombreEspecie,
                     Raza = g.Key.NombreRaza,
-                    Sum = g.Sum(l => l.CantidadAnimales)
+                    Sum = g.Sum(l => l.CantidadActual)
                 })
                 .ToListAsync();
 
@@ -290,7 +290,7 @@ public class AnimalController : ControllerBase
                 {
                     Especie = g.Key.NombreEspecie,
                     Raza = g.Key.NombreRaza,
-                    Sum = g.Sum(l => l.CantidadAnimales)
+                    Sum = g.Sum(l => l.CantidadActual)
                 })
                 .ToListAsync();
 
