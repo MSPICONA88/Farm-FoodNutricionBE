@@ -34,6 +34,7 @@ public class UsuarioController : ControllerBase
                 c.Password.Equals(comando.Password)).FirstOrDefaultAsync();
             if (usuario != null)
             {
+                result.IdUsuario=usuario.IdUsuario.ToString();
                 result.NombreUsuario = usuario.Usuario1;
                 result.Rol = usuario.IdRolNavigation.NombreRol;
                 result.StatusCode = "200";

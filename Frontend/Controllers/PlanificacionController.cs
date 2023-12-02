@@ -204,7 +204,9 @@ public class PlanificacionController : ControllerBase
     public ActionResult<List<AlimentoStockDTO>> GetToneladasAlimentoCompra()
     {
         // Obtener todos los alimentos
-        var alimentos = _context.Alimentos.ToList();
+        var alimentos = _context.Alimentos
+        .OrderBy(a => a.NombreAlimento)
+        .ToList();
 
         // Crear una lista para almacenar los datos de cada alimento
         var listaAlimentos = new List<AlimentoStockDTO>();
