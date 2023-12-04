@@ -107,98 +107,170 @@ public class PlanificacionController : ControllerBase
         }
     }
 
-    //FUNCIONA OK PERO LOS VALORES EN NEGATIVO LOS PONE COMO BAJO STOCK CUANDO DEBERIA DECIR SOBRESTOCK
-    // [HttpGet("api/reporte/toneladasAlimentoCompra")]
-    // public ActionResult<List<AlimentoStockDTO>> GetToneladasAlimentoCompra()
-    // {
-    //     // Obtener todos los alimentos
-    //     var alimentos = _context.Alimentos.ToList();
+    [HttpGet]
+    [Route("api/planes/traerPlanificacion")]
 
-    //     // Crear una lista para almacenar los datos de cada alimento
-    //     var listaAlimentos = new List<AlimentoStockDTO>();
+    public async Task<ActionResult<ResultadoListPlanAlimentacion>> GetAllPlanes()
+    {
+        try
+        {
+            var query = from pa in _context.PlanesAlimentacions
+                        join l in _context.Lotes on pa.IdLote equals l.IdLote
+                        join r in _context.Razas on l.IdRaza equals r.IdRaza
+                        join e in _context.Especies on r.IdEspecie equals e.IdEspecie
+                        join d in _context.Dietas on pa.IdDieta equals d.IdDieta
+                        orderby pa.IdPlan ascending
+                        select new ResultadoListPlanAlimentacionItem
+                        {
+                            IdPlan = pa.IdPlan,
+                            IdLote = pa.IdLote,
+                            NombreEspecie = e.NombreEspecie,
+                            Raza = r.NombreRaza,
+                            Cantidad = l.CantidadAnimales,
+                            NombreDieta = d.NombreDieta,
+                            FechaInicio = pa.FechaInicio,
+                            FechaFin = pa.FechaFin,
+                            CantPorDiaPorAnimal = (pa.CantToneladaDiaria / l.CantidadAnimales),
+                            CantToneladaDiaria = pa.CantToneladaDiaria
+                        };
 
-    //     // Recorrer cada alimento
-    //     foreach (var alimento in alimentos)
-    //     {
-    //         // Obtener el stock actual del alimento
-    //         decimal stockActual = ObtenerStockAlimentos(alimento.IdAlimento);
+            var resultados = await query.ToListAsync();
 
-    //         // Obtener el stock necesario para cubrir todos los planes de alimentación hasta la última fecha
-    //         decimal stockNecesario = ObtenerStockNecesario(alimento.IdAlimento);
+            var resultados2 = new ResultadoListPlanAlimentacion
+            {
+                listaPlanesAlimentacion = resultados
+            };
 
-    //         // Calcular la cantidad a comprar
-    //         decimal cantidadAComprar = stockNecesario - stockActual;
+            return resultados2;
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
 
-    //         // Calcular el estado
-    //         string estado;
-    //         if (stockActual == 0 || stockNecesario > stockActual)
-    //         {
-    //             estado = "SIN STOCK";
-    //         }
-    //         else if (stockNecesario > 0.3m * stockActual && stockNecesario <= 0.6m * stockActual)
-    //         {
-    //             estado = "MUY BAJO";
-    //         }
-    //         else if (stockNecesario <= 0.3m * stockActual)
-    //         {
-    //             estado = "BAJO";
-    //         }
-    //         else if (stockActual > 1.1m * stockNecesario)
-    //         {
-    //             estado = "SOBRESTOCK";
-    //             cantidadAComprar = 0; // No se necesita comprar en caso de sobrestock
-    //         }
-    //         else
-    //         {
-    //             estado = "OK";
-    //         }
+    [HttpGet]
+    [Route("api/planes/traerPlaniPorId/{idPlan}")]
+    public async Task<ActionResult<ResultadoPlanPorId>> GetPlanPorId(int idPlan)
+    {
+        try
+        {
+            var resultado = await (from pa in _context.PlanesAlimentacions
+                                   join l in _context.Lotes on pa.IdLote equals l.IdLote
+                                   join r in _context.Razas on l.IdRaza equals r.IdRaza
+                                   join e in _context.Especies on r.IdEspecie equals e.IdEspecie
+                                   join d in _context.Dietas on pa.IdDieta equals d.IdDieta
+                                   where pa.IdPlan == idPlan
+                                   select new ResultadoPlanPorId
+                                   {
+                                       IdPlan = pa.IdPlan,
+                                       IdLote = pa.IdLote,
+                                       FechaInicio = pa.FechaInicio,
+                                       FechaFin = pa.FechaFin,
+                                       CantToneladaDiaria = pa.CantToneladaDiaria
+                                   })
+                                   .FirstOrDefaultAsync();
 
-    //         // Crear objeto DTO con los datos del alimento
-    //         var alimentoDTO = new AlimentoStockDTO
-    //         {
-    //             IdAlimento = alimento.IdAlimento,
-    //             NombreAlimento = alimento.NombreAlimento,
-    //             StockActual = stockActual,
-    //             StockNecesario = stockNecesario,
-    //             CantidadAComprar = cantidadAComprar,
-    //             Estado = estado
-    //         };
+            if (resultado == null)
+            {
+                return NotFound(); // 404 Not Found si el plan no existe
+            }
 
-    //         // Agregar el objeto DTO a la lista
-    //         listaAlimentos.Add(alimentoDTO);
-    //     }
+            return resultado;
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
 
-    //     return listaAlimentos;
-    // }
+    [HttpPut("api/planes/editarPlaniPorId/{idPlan}")]
+    public async Task<ResultadoUpdatePlanAlimentacion> EditarPlani(int idPlan, ComandoPlanAlimentacion comandoPlani)
+    {
+        var result = new ResultadoUpdatePlanAlimentacion();
+        var plani = await _context.PlanesAlimentacions.FindAsync(idPlan);
+        if (plani == null)
+        {
+            result.SetError("No se encontró el id de plani");
+            result.StatusCode = "404";
+            return result;
+        }
 
-    // private decimal ObtenerStockAlimentos(int idAlimento)
-    // {
-    //     var fechaActual = DateOnly.FromDateTime(DateTime.Now.Date);
+        // Validar si se ingresó una fecha de egreso
 
-    //     // Obtener todos los registros de stock de alimentos para el alimento especificado
-    //     var registrosStock = _context.StockAlimentos
-    //         .Where(s => s.IdAlimento == idAlimento && s.FechaRegistro <= fechaActual)
-    //         .ToList();
 
-    //     // Sumar todas las toneladas de los registros de stock
-    //     var stockTotal = registrosStock.Sum(s => s.Toneladas);
 
-    //     // Retornar el stock total
-    //     return (decimal)stockTotal;
-    // }
+        plani.IdLote = comandoPlani.IdLote;
+        plani.IdDieta = comandoPlani.IdDieta;
+        plani.FechaInicio = DateOnly.Parse(comandoPlani.FechaInicio);
+        plani.FechaFin = DateOnly.Parse(comandoPlani.FechaFin);
+        plani.CantToneladaDiaria = comandoPlani.CantToneladaDiaria;
 
-    // private decimal ObtenerStockNecesario(int idAlimento)
-    // {
-    //     // Obtener la última fecha de los planes de alimentación
-    //     var ultimaFecha = _context.PlanesAlimentacions.Max(p => p.FechaFin);
 
-    //     // Calcular el stock necesario sumando las toneladas diarias de los planes de alimentación hasta la última fecha
-    //     decimal stockNecesario = (decimal)_context.PlanesAlimentacions
-    //         .Where(p => p.FechaFin <= ultimaFecha)
-    //         .Sum(p => p.CantToneladaDiaria);
+        _context.PlanesAlimentacions.Update(plani);
 
-    //     return stockNecesario;
-    // }
+        var resultadoUpdate = await _context.SaveChangesAsync();
+
+
+        if (resultadoUpdate < 1)
+        {
+            result.SetError("No se pudo actualizar la planificacion");
+            result.StatusCode = "404";
+            return result;
+        }
+
+
+        result.IdLote = plani.IdLote;
+        result.IdDieta = plani.IdDieta;
+        result.FechaInicio = plani.FechaInicio;
+        result.FechaFin = plani.FechaFin;
+        result.CantToneladaDiaria = plani.CantToneladaDiaria;
+
+        // result.PesoEgreso = (double)lote.PesoEgreso;
+        // result.FechaEgreso = (DateOnly)lote.FechaEgreso;
+        result.StatusCode = "200";
+        return result;
+    }
+
+    [HttpDelete("api/planes/borrarPlani/{id}")]
+    public async Task<ActionResult<ResultadoBorrarPlani>> BorrarPlani(int id)
+    {
+        var resultado = new ResultadoBorrarPlani();
+
+        // Verificar si la dieta existe
+        var plan = await _context.PlanesAlimentacions.FindAsync(id);
+
+        if (plan == null)
+        {
+            resultado.SetError("No se encontró el plan de alimentación con el ID especificado");
+            resultado.StatusCode = "404";
+            return resultado;
+        }
+
+        // Verificar si hay alimentaciones asociadas al plan
+        if (_context.Alimentaciones.Any(a => a.IdPlan == id))
+        {
+            resultado.SetError("No se puede borrar el plan de alimentación, ya que ha sido utilizado en alimentaciones");
+            resultado.StatusCode = "400";  // Cambiado a 400 (Bad Request) ya que la solicitud no es válida debido a la restricción
+            return resultado;
+        }
+
+        // Eliminar el plan de alimentación
+        _context.PlanesAlimentacions.Remove(plan);
+
+        var resultadoDelete = await _context.SaveChangesAsync();
+
+        if (resultadoDelete < 1)
+        {
+            resultado.SetError("No se pudo borrar el plan de alimentación");
+            resultado.StatusCode = "404";
+            return resultado;
+        }
+
+        resultado.IdPlani = plan.IdLote;
+        resultado.StatusCode = "200";
+        return Ok(resultado);
+    }
 
     [HttpGet("api/reporte/toneladasAlimentoCompra")]
     public ActionResult<List<AlimentoStockDTO>> GetToneladasAlimentoCompra()

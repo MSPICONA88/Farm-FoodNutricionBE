@@ -315,7 +315,7 @@ public class DietaController : ControllerBase
             var alimentoIdsDuplicados = alimentoIds.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
             if (alimentoIdsDuplicados.Any())
             {
-                return BadRequest($"No se pueden ingresar alimentos duplicados: {string.Join(", ", alimentoIdsDuplicados)}");
+                return BadRequest($"No se pueden ingresar alimentos duplicados");
             }
 
             // Actualizar el detalle de alimentos
@@ -343,9 +343,9 @@ public class DietaController : ControllerBase
             }
             // Validar la suma de los porcentajes de los alimentos
             var sumaPorcentajes = alimentosPorDieta.Sum(a => a.Porcentaje);
-            if (sumaPorcentajes > 100)
+            if (sumaPorcentajes != 100)
             {
-                return BadRequest("La suma de los porcentajes de los alimentos no puede ser mayor a 100");
+                return BadRequest("La suma de los porcentajes de los alimentos debe ser igual a 100");
             }
 
             // Eliminar los alimentos que no se incluyeron en el detalle

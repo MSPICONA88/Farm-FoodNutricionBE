@@ -161,7 +161,7 @@ public class LoteController : ControllerBase
         DateOnly fechaFin = DateOnly.Parse(comandoFechas.FechaFin);
 
         var lotesPorFecha = await _context.Lotes
-            .Where(l => (l.FechaIngreso >= fechaInicio && l.FechaIngreso <= fechaFin) && (l.FechaEgreso == null))
+            .Where(l => l.FechaIngreso >= fechaInicio && l.FechaIngreso <= fechaFin && (l.FechaEgreso == null))
             .Include(l => l.IdFinalidadNavigation)
             .Include(l => l.IdRazaNavigation)
             .OrderByDescending(l => l.FechaIngreso)
