@@ -1,6 +1,7 @@
 using System;
 using System.Net.Mime;
 using Frontend.Comandos.Usuarios;
+using Frontend.Controllers.Usuarios;
 using Frontend.Models;
 using Frontend.Resultados;
 using Frontend.Resultados.Usuarios;
@@ -34,7 +35,7 @@ public class UsuarioController : ControllerBase
                 c.Password.Equals(comando.Password)).FirstOrDefaultAsync();
             if (usuario != null)
             {
-                result.IdUsuario=usuario.IdUsuario.ToString();
+                result.IdUsuario = usuario.IdUsuario.ToString();
                 result.NombreUsuario = usuario.Usuario1;
                 result.Rol = usuario.IdRolNavigation.NombreRol;
                 result.StatusCode = "200";
@@ -145,47 +146,79 @@ public class UsuarioController : ControllerBase
         return Ok(result);
     }
 
-[HttpGet]
-[Route("api/usuario/todos")]
+    [HttpGet]
+    [Route("api/usuario/todos")]
     public async Task<ActionResult<ResultadoListUsuarios>> GetUsuarios()
     {
         // try
         // {
-            var result= new ResultadoListUsuarios();
+        var result = new ResultadoListUsuarios();
 
-            
-            var usuarios=  await _context.Usuarios.Include(u => u.IdRolNavigation).ToListAsync();
-            if(usuarios!=null){
-                foreach (var user in usuarios){
-                    var resultAux = new ResultadoListUsuariosItem
-                    {
-                        NombreApellido= user.NombreApellido,
-                        NombreUsuario = user.Usuario1,
-                        Email = user.Email,
-                        Rol= user.IdRolNavigation.NombreRol
-                        
-                    };
-                    result.listaUsuarios.Add(resultAux);
-                    result.StatusCode= "200";
-                }
-                return Ok(result);
-            }
 
-            else
+        var usuarios = await _context.Usuarios.Include(u => u.IdRolNavigation).ToListAsync();
+        if (usuarios != null)
+        {
+            foreach (var user in usuarios)
             {
-                return Ok(result);
+                var resultAux = new ResultadoListUsuariosItem
+                {
+                    NombreApellido = user.NombreApellido,
+                    NombreUsuario = user.Usuario1,
+                    Email = user.Email,
+                    Rol = user.IdRolNavigation.NombreRol
+
+                };
+                result.listaUsuarios.Add(resultAux);
+                result.StatusCode = "200";
             }
-        //}
+            return Ok(result);
+        }
 
-        // catch(Exception e)
-        // {
-        //     return BadRequest("Error al obtener los usuarios");
-        // }
+        else
+        {
+            return Ok(result);
+        }
 
-        
-        
+
 
     }
+
+    [HttpPut]
+    [Route("api/usuario/cambiarContrasena{idUsuario}")]
+    public async Task<ActionResult<ResultadoLogin>> CambiarContrasena(int idUsuario, [FromBody] ComandoCambiarContrasena comando)
+    {
+        var usuario = await _context.Usuarios.FindAsync(idUsuario);
+        var result = new ResultadoLogin();
+
+        if (usuario == null)
+        {
+            result.SetError("Usuario no encontrado");
+            result.StatusCode = "500";
+            return Ok(result);
+        }
+
+        // Verificar la contraseña actual del usuario
+        if (comando.ContrasenaActual != usuario.Password)
+        {
+            result.SetError("Contraseña actual incorrecta");
+            result.StatusCode = "500";
+            return Ok(result);
+        }
+
+        if (comando.NuevaContrasena != comando.RepetirNuevaContrasena)
+        {
+            result.SetError("La repetición de contraseña no coincide");
+            result.StatusCode = "500";
+            return Ok(result);
+        }
+        // Actualizar la contraseña del usuario
+        usuario.Password = comando.NuevaContrasena;
+        await _context.SaveChangesAsync();
+
+        result.StatusCode = "200";
+        return Ok(result);
+    }
+
 }
 
 

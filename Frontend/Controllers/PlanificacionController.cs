@@ -130,7 +130,7 @@ public class PlanificacionController : ControllerBase
                             NombreDieta = d.NombreDieta,
                             FechaInicio = pa.FechaInicio,
                             FechaFin = pa.FechaFin,
-                            CantPorDiaPorAnimal = (pa.CantToneladaDiaria / l.CantidadAnimales),
+                            CantPorDiaPorAnimal = (pa.CantToneladaDiaria / l.CantidadAnimales)*1000,
                             CantToneladaDiaria = pa.CantToneladaDiaria
                         };
 
