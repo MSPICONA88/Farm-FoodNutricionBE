@@ -94,7 +94,7 @@ public class EspecieController : ControllerBase
         var cantidadActual = await _context.Lotes.SumAsync(l => l.CantidadActual);
         var cantidadInicial = await _context.Lotes.SumAsync(l => l.CantidadAnimales);
         var pesoIngreso = await _context.Lotes.SumAsync(l => l.PesoIngreso);
-        var pesoPromedio = await _context.Lotes.AverageAsync(l => l.PesoIngreso);
+        var pesoPromedio = await _context.Lotes.SumAsync(l => l.PesoIngreso)/cantidadInicial;
         var pesoActualAprox= pesoPromedio*cantidadActual;
 
         var especiesData = new

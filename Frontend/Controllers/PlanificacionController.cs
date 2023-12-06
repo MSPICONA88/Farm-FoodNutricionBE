@@ -130,7 +130,7 @@ public class PlanificacionController : ControllerBase
                             NombreDieta = d.NombreDieta,
                             FechaInicio = pa.FechaInicio,
                             FechaFin = pa.FechaFin,
-                            CantPorDiaPorAnimal = (pa.CantToneladaDiaria / l.CantidadAnimales)*1000,
+                            CantPorDiaPorAnimal = (pa.CantToneladaDiaria / l.CantidadAnimales),
                             CantToneladaDiaria = pa.CantToneladaDiaria
                         };
 
@@ -297,31 +297,32 @@ public class PlanificacionController : ControllerBase
 
             // Calcular el estado
             string estado;
-            decimal porcentajeFaltante = (stockNecesario - stockActual) / stockNecesario * 100;
+            decimal porcentajeFaltante = (stockNecesario != 0) ? (stockNecesario - stockActual) / stockNecesario * 100 : 0;
+
             //decimal porcentajeSobrante = (stockActual-stockNecesario) / stockNecesario * 100;
-            if (stockActual < stockNecesario)
-            {
-                if (porcentajeFaltante <= 10)
+                if (stockActual < stockNecesario)
                 {
-                    estado = "BAJO";
+                    if (porcentajeFaltante <= 10)
+                    {
+                        estado = "BAJO";
+                    }
+                    else
+                    {
+                        estado = "SIN STOCK";
+                    }
                 }
                 else
                 {
-                    estado = "SIN STOCK";
+                    if ((porcentajeFaltante >= -10 && cantidadAComprar > 0) || stockNecesario == 0)
+                    {
+                        estado = "OK";
+                    }
+                    else
+                    {
+                        estado = "SOBRESTOCK";
+                        cantidadAComprar = 0; // No se necesita comprar en caso de sobrestock
+                    }
                 }
-            }
-            else
-            {
-                if (porcentajeFaltante >= (-10))
-                {
-                    estado = "OK";
-                }
-                else
-                {
-                    estado = "SOBRESTOCK";
-                    cantidadAComprar = 0; // No se necesita comprar en caso de sobrestock
-                }
-            }
 
             // Crear objeto DTO con los datos del alimento
             var alimentoDTO = new AlimentoStockDTO
@@ -359,19 +360,44 @@ public class PlanificacionController : ControllerBase
 
     private decimal ObtenerStockNecesario(int idAlimento)
     {
-        // Obtener la última fecha de los planes de alimentación
-        var ultimaFecha = _context.PlanesAlimentacions.Max(p => p.FechaFin);
+        DateOnly fechaActual = DateOnly.FromDateTime(DateTime.Now.Date);
+        var cantNecesariaFinal = 0.0;
+        var planesAlimentacionQuery = from plan in _context.PlanesAlimentacions
+                                      join dieta in _context.Dietas on plan.IdDieta equals dieta.IdDieta
+                                      join alimentosDieta in _context.AlimentosxDieta on dieta.IdDieta equals alimentosDieta.IdDieta
+                                      where alimentosDieta.IdAlimento == idAlimento  // Reemplaza el 4 con el idAlimento que estás buscando
+                                      orderby plan.IdPlan
+                                      select new
+                                      {
+                                          Plan = plan,
+                                          Dieta = dieta,
+                                          AlimentosDieta = alimentosDieta
+                                      };
 
-        // Calcular el stock necesario sumando las toneladas diarias de los planes de alimentación hasta la última fecha
-        decimal stockNecesario = (decimal)_context.PlanesAlimentacions
-            .Where(p => p.FechaFin <= ultimaFecha)
-            .Sum(p => p.CantToneladaDiaria);
+        var planesAlimentacion = planesAlimentacionQuery.ToList();
 
-        return stockNecesario;
+        foreach (var plan in planesAlimentacion)
+        {
+            DateOnly fechaInicio = plan.Plan.FechaInicio;
+            DateOnly fechaFin = plan.Plan.FechaFin;
+
+            // Calcular la cantidad de días según la lógica especificada
+            int cantidadDias = (fechaInicio <= fechaActual && fechaFin > fechaActual)
+                ? (int)((fechaFin.DayNumber - fechaActual.DayNumber)+1)
+                : (fechaFin < fechaActual)
+                    ? 0 //vencido
+                    : (int)(fechaFin.DayNumber - fechaInicio.DayNumber)+1;
+
+
+            // Calcular la cantidad de alimento necesaria
+            decimal cantidadAlimentoNecesaria = cantidadDias * (decimal)plan.Plan.CantToneladaDiaria * (plan.AlimentosDieta.Porcentaje / 100.0m);
+            cantNecesariaFinal += (double)cantidadAlimentoNecesaria;
+            // Puedes hacer lo que necesites con la cantidad de alimento calculada
+            Console.WriteLine($"Plan {plan.Plan.IdPlan}: {cantidadAlimentoNecesaria} toneladas de alimento necesarias");
+        }
+
+        return (decimal)cantNecesariaFinal;
+
     }
 
-
-
 }
-
-
